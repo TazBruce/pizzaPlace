@@ -1,2 +1,2 @@
-# expTrack
-Tracks your expenses for easy budgeting!
+# pizzaPlace WIP
+Fully featured pizza ordering system! 
