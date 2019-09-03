@@ -17,4 +17,3 @@ while True:  # Event Loop
         window.Element('_OUTPUT_').Update(values['_IN_'])
 
 window.Close()
-db.close()
