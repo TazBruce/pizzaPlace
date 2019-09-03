@@ -1,4 +1,5 @@
 import PySimpleGUI as sg
+import sqlite3
 
 layout = [[sg.Text('Your typed chars appear here:'), sg.Text('', size=(15,1), key='_OUTPUT_')],
           [sg.Input(key='_IN_')],
@@ -16,3 +17,4 @@ while True:  # Event Loop
         window.Element('_OUTPUT_').Update(values['_IN_'])
 
 window.Close()
+db.close()
