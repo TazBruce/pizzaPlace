@@ -11,13 +11,14 @@ tab1_layout = [[sg.T('Add order')],
 tab2_layout = [[sg.T('This is inside tab 2')],
                [sg.In(key='in')]]
 
-layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout), sg.Tab('Tab 2', tab2_layout)]])],
-          [sg.Button('Read')]]
+layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout), sg.Tab('Tab 2', tab2_layout)]])]]
 
-window = sg.Window('My window with tabs', layout, default_element_size=(12, 1))
+window = sg.Window('pizzaPlace', layout, default_element_size=(20, 1))
 
 while True:
     event, values = window.Read()
     print(event, values)
     if event is None:  # always,  always give a way out!
         break
+
+# valuecheck(variable,True = String/False = Integer,minimum,maximum)
