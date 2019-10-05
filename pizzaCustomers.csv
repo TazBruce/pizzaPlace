@@ -1,2 +1,2 @@
 First Name,Last Name,Ordered Pizzas,Delivery,Total Cost
-Taz,Bruce,"Ham & Cheese, Cheese",YES,11
+Taz       ,Bruce    ,"Ham & Cheese, Cheese",True    ,11
