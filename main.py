@@ -30,18 +30,19 @@ def valuecheck(value, string, minimum, maximum):
 
 # Function that refreshes customer order table
 def tableupdate(customertable):
-    if customertable:
+    if customertable:  # if customertable is equal to True open pizzaCustomers
         with open('pizzaCustomers.csv', "r") as inFile:
             reader = csv.reader(inFile)
-            next(reader, None)  # skips
+            next(reader, None)  # skips header row
             data = list(reader)  # read everything else into a list of rows
-            window.element('_ORDER_TABLE_').Update(values=data, num_rows=min(len(data), 20))
+            window.element('_ORDER_TABLE_').Update(values=data, num_rows=min(len(data), 20))  # update table on GUI
     else:
         with open('pizzaList.csv', "r") as inFile:
             reader = csv.reader(inFile)
             next(reader, None)
             data = list(reader)  # read everything else into a list of rows
             window.element('_PIZZA_TABLE_').Update(values=data, num_rows=min(len(data), 20))
+            window.element('_PIZZA_LIST_TABLE_').Update(values=data, num_rows=min(len(data), 20))
 
 
 with open('pizzaCustomers.csv', "r") as CustomerTable:
@@ -60,7 +61,14 @@ tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                [sg.T('First Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0))],
                [sg.T('Last Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0))],
                [sg.T('Add Pizza', size=(10, 0)), sg.VerticalSeparator(pad=None),
-                sg.Combo(('Ham & Cheese', 'Cheese'), size=(17, 0)), sg.Button('Add', size=(5, 0))],
+                sg.Table(
+                    values=pizzaData,
+                    headings=pizzaHeaderList,
+                    max_col_width=25,
+                    auto_size_columns=True,
+                    justification='right',
+                    alternating_row_color='lightblue',
+                    num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_'), sg.Button('Add', size=(5, 0))],
                [sg.T('Total Pizzas', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Combo("X", size=(17, 0)),
                 sg.Button('Delete', size=(5, 0))],
                [sg.T('Delivery?', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Checkbox(''), sg.T('Total Cost'),
@@ -88,7 +96,7 @@ tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
                    auto_size_columns=True,
                    justification='right',
                    alternating_row_color='lightblue',
-                   num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_')]
+                   num_rows=min(len(pizzaData), 20), key='_PIZZA_LIST_TABLE_')]
                ]
 layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout),
                          sg.Tab('View Orders', tab2_layout),
@@ -97,7 +105,6 @@ layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout),
 
 window = sg.Window('pizzaPlace', layout, default_element_size=(20, 1))
 
-event, values = window.Read()
 while True:
     event, values = window.Read()
     print(values)
@@ -105,13 +112,13 @@ while True:
         with open('pizzaCustomers.csv', "a", newline='') as newFile:
             writer = csv.writer(newFile)
             writer.writerow([values[0], values[1], values[2], values[4]])
-            tableupdate(True)
+        tableupdate(True)
     elif event == 'Create':
         print("Created")
-        with open(r'pizzaList.csv', 'a', newline='') as pizzaFile:
+        with open('pizzaList.csv', 'a', newline='') as pizzaFile:
             writer = csv.writer(pizzaFile)
-            writer.writerow([values[5], values[6]])
-            tableupdate(False)
+            writer.writerow([values[4], values[5]])
+        tableupdate(False)
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
 
