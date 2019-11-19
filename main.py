@@ -60,7 +60,7 @@ with open('pizzaList.csv', "r") as PizzaTable:
 tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                [sg.T('First Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0))],
                [sg.T('Last Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0))],
-               [sg.T('Add Pizza', size=(10, 0)), sg.VerticalSeparator(pad=None),
+               [sg.T('Add Pizza', size=(10, 0)), sg.VerticalSeparator(pad=(7, 0)),
                 sg.Table(
                     values=pizzaData,
                     headings=pizzaHeaderList,
@@ -69,7 +69,8 @@ tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                     justification='right',
                     alternating_row_color='lightblue',
                     num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_'), sg.Button('Add', size=(5, 0))],
-               [sg.T('Total Pizzas', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Combo("X", size=(17, 0)),
+               [sg.T('Total Pizzas', size=(10, 0), key="_TOTAL_PIZZA_"), sg.VerticalSeparator(pad=None),
+                sg.Combo("X", size=(17, 0)),
                 sg.Button('Delete', size=(5, 0))],
                [sg.T('Delivery?', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Checkbox(''), sg.T('Total Cost'),
                 sg.T('$')],
@@ -119,6 +120,15 @@ while True:
             writer = csv.writer(pizzaFile)
             writer.writerow([values[4], values[5]])
         tableupdate(False)
+    elif event == 'Add':
+        pizzaList = []
+        with open('pizzaList.csv', 'r', newline='') as pizzaFile:
+            reader = csv.reader(pizzaFile)
+            rows = list(reader)
+            rowNum = int(str(values['_PIZZA_TABLE_']).strip('[]'))  # row number selected from table and remove brackets
+            rowNum += 1  # skip header row
+            print(rows[rowNum])
+            # window.element('_PIZZA_LIST_TABLE_').Update(values=data, num_rows=min(len(data), 20))
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
 
