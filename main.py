@@ -1,6 +1,7 @@
 import csv
 
 import PySimpleGUI as sg
+import pandas as pd
 
 pizzaList = []
 
@@ -75,7 +76,7 @@ with open('pizzaList.csv', "r") as PizzaTable:
     pizzaHeaderList = next(pizzaReader)
     pizzaData = list(pizzaReader)  # read everything else into a list of rows
 
-# sg.ChangeLookAndFeel('Reds')
+sg.ChangeLookAndFeel('Reds')
 
 tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                [sg.T('First Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0))],
@@ -87,7 +88,6 @@ tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                     max_col_width=25,
                     auto_size_columns=True,
                     justification='left',
-                    alternating_row_color='lightblue',
                     num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_'), sg.Button('Add', size=(5, 0))],
                [sg.T('Total Pizzas', size=(10, 0)), sg.VerticalSeparator(pad=None),
                 sg.Listbox(values=[], size=(17, 0), key="_TOTAL_PIZZA_"),
@@ -103,7 +103,6 @@ tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold')],
                    max_col_width=25,
                    auto_size_columns=True,
                    justification='left',
-                   alternating_row_color='lightblue',
                    num_rows=min(len(customerData), 20), key='_ORDER_TABLE_')]
                ]
 tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
@@ -116,7 +115,6 @@ tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
                    max_col_width=25,
                    auto_size_columns=True,
                    justification='left',
-                   alternating_row_color='lightblue',
                    num_rows=min(len(pizzaData), 20), key='_PIZZA_LIST_TABLE_')],
                [sg.Button('Remove')]
                ]
@@ -146,10 +144,9 @@ while True:
         pizzaList = []
         addpizza(False)
     elif event == 'Remove':
-        with open('pizzaList.csv', 'a', newline='') as pizzaFile:
-            reader = csv.reader(pizzaFile)
-            rows = list(reader)[1:]
-
+        table = pd.read_csv("pizzaList.csv")
+        delTable = table.drop(values['_PIZZA_LIST_TABLE_'])
+        export_csv = delTable.to_csv(r'pizzaList.csv', index=None, header=True)
         tableupdate(False)
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break

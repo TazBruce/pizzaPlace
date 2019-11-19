@@ -1,4 +1,2 @@
 First Name,Last Name,Ordered Pizzas,Delivery,Total Cost
-Cathie    ,Bruce    ,"'Chicken', 'Cheese'"             ,True    ,
-Mayville  ,Wootton  ,"'Beef & Onion', 'Classic Cheese'",True    ,
-Taz       ,Bruce    ,"'Classic Cheese', 'Ham & Cheese  ', 'Classic Veggie'",True    ,
+Taz       ,Bruce    ,"'Pepperoni', 'Pepperoni'",True    ,
