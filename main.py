@@ -2,6 +2,11 @@ import csv
 
 import PySimpleGUI as sg
 
+pizzaList = []
+
+
+# price = 0
+
 
 # Function that checks value for set parameters
 def valuecheck(value, string, minimum, maximum):
@@ -45,6 +50,21 @@ def tableupdate(customertable):
             window.element('_PIZZA_LIST_TABLE_').Update(values=data, num_rows=min(len(data), 20))
 
 
+def addpizza(add):
+    if add:
+        with open('pizzaList.csv', 'r', newline='') as pizzaFile:
+            reader = csv.reader(pizzaFile)
+            rows = list(reader)
+            rowNum = int(str(values['_PIZZA_TABLE_']).strip('[]'))  # row number selected from table and remove brackets
+            rowNum += 1  # skip header row
+            pizza = rows[rowNum]
+            pizzaList.append(pizza[0])
+            window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
+            # price += int(pizza[1])
+    else:
+        window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
+
+
 with open('pizzaCustomers.csv', "r") as CustomerTable:
     customerReader = csv.reader(CustomerTable)
     customerHeaderList = next(customerReader)
@@ -66,11 +86,11 @@ tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                     headings=pizzaHeaderList,
                     max_col_width=25,
                     auto_size_columns=True,
-                    justification='right',
+                    justification='left',
                     alternating_row_color='lightblue',
                     num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_'), sg.Button('Add', size=(5, 0))],
-               [sg.T('Total Pizzas', size=(10, 0), key="_TOTAL_PIZZA_"), sg.VerticalSeparator(pad=None),
-                sg.Combo("X", size=(17, 0)),
+               [sg.T('Total Pizzas', size=(10, 0)), sg.VerticalSeparator(pad=None),
+                sg.Listbox(values=[], size=(17, 0), key="_TOTAL_PIZZA_"),
                 sg.Button('Delete', size=(5, 0))],
                [sg.T('Delivery?', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Checkbox(''), sg.T('Total Cost'),
                 sg.T('$')],
@@ -82,7 +102,7 @@ tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold')],
                    headings=customerHeaderList,
                    max_col_width=25,
                    auto_size_columns=True,
-                   justification='right',
+                   justification='left',
                    alternating_row_color='lightblue',
                    num_rows=min(len(customerData), 20), key='_ORDER_TABLE_')]
                ]
@@ -95,9 +115,10 @@ tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
                    headings=pizzaHeaderList,
                    max_col_width=25,
                    auto_size_columns=True,
-                   justification='right',
+                   justification='left',
                    alternating_row_color='lightblue',
-                   num_rows=min(len(pizzaData), 20), key='_PIZZA_LIST_TABLE_')]
+                   num_rows=min(len(pizzaData), 20), key='_PIZZA_LIST_TABLE_')],
+               [sg.Button('Remove')]
                ]
 layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout),
                          sg.Tab('View Orders', tab2_layout),
@@ -112,22 +133,24 @@ while True:
     if event == 'Confirm':
         with open('pizzaCustomers.csv', "a", newline='') as newFile:
             writer = csv.writer(newFile)
-            writer.writerow([values[0], values[1], values[2], values[4]])
+            writer.writerow([values[0], values[1], str(pizzaList).strip('[]'), values[2], values[4]])
         tableupdate(True)
     elif event == 'Create':
-        print("Created")
         with open('pizzaList.csv', 'a', newline='') as pizzaFile:
             writer = csv.writer(pizzaFile)
-            writer.writerow([values[4], values[5]])
+            writer.writerow([values[3], values[4]])
         tableupdate(False)
     elif event == 'Add':
-        with open('pizzaList.csv', 'r', newline='') as pizzaFile:
+        addpizza(True)
+    elif event == 'Delete':
+        pizzaList = []
+        addpizza(False)
+    elif event == 'Remove':
+        with open('pizzaList.csv', 'a', newline='') as pizzaFile:
             reader = csv.reader(pizzaFile)
-            rows = list(reader)
-            rowNum = int(str(values['_PIZZA_TABLE_']).strip('[]'))  # row number selected from table and remove brackets
-            rowNum += 1  # skip header row
-            print(rows[rowNum])
-            # window.element('_PIZZA_LIST_TABLE_').Update(values=data, num_rows=min(len(data), 20))
+            rows = list(reader)[1:]
+
+        tableupdate(False)
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
 

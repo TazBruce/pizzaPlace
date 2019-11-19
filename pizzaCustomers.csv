@@ -1,3 +1,4 @@
 First Name,Last Name,Ordered Pizzas,Delivery,Total Cost
-Taz       ,Bruce    ,"Ham & Cheese, Cheese",True    ,11
-Mayviolla ,Wootton  ,Ham                   ,True    ,5
+Cathie    ,Bruce    ,"'Chicken', 'Cheese'"             ,True    ,
+Mayville  ,Wootton  ,"'Beef & Onion', 'Classic Cheese'",True    ,
+Taz       ,Bruce    ,"'Classic Cheese', 'Ham & Cheese  ', 'Classic Veggie'",True    ,
