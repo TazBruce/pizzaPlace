@@ -9,6 +9,20 @@ pizzaList = []
 # price = 0
 
 
+# Function that checks what tab the user is on, then deletes the currently selected row on that tab
+def deltable():
+    if values['_TAB_GROUP_'] == 'Create Pizza':
+        table = pd.read_csv("pizzaList.csv")
+        deltable = table.drop(values['_PIZZA_LIST_TABLE_'])
+        export_csv = deltable.to_csv(r'pizzaList.csv', index=None, header=True)
+        tableupdate(False)
+    else:
+        table = pd.read_csv("pizzaCustomers.csv")
+        delTable = table.drop(values['_ORDER_TABLE_'])
+        export_csv = delTable.to_csv(r'pizzaCustomers.csv', index=None, header=True)
+        tableupdate(True)
+
+
 # Function that checks value for set parameters
 def valuecheck(value, string, minimum, maximum):
     # If 'string' parameter is set to True test for character count
@@ -104,7 +118,7 @@ tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold')],
                    auto_size_columns=True,
                    justification='left',
                    num_rows=min(len(customerData), 20), key='_ORDER_TABLE_')],
-               [sg.Button("Delete")]
+               [sg.Button('Delete')]
                ]
 tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
                [sg.T('Pizza Name  '), sg.Input(size=(23, 1))],
@@ -117,12 +131,12 @@ tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
                    auto_size_columns=True,
                    justification='left',
                    num_rows=min(len(pizzaData), 20), key='_PIZZA_LIST_TABLE_')],
-               [sg.Button('Delete')]
+               [sg.Button('Cut')]
                ]
 layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout),
                          sg.Tab('Total Orders', tab2_layout),
                          sg.Tab('Create Pizza', tab3_layout)]
-                        ], key="_TAB_", selected_title_color='red', title_color='black', enable_events=True)]]
+                        ], key="_TAB_GROUP_", selected_title_color='red', title_color='black', enable_events=True)]]
 
 window = sg.Window('pizzaPlace', layout, default_element_size=(20, 1))
 
@@ -144,17 +158,8 @@ while True:
     elif event == 'Remove':
         pizzaList = []
         addpizza(False)
-    elif event == 'Delete':
-        if values['_TAB_'] == 'Create Pizza':
-            table = pd.read_csv("pizzaList.csv")
-            delTable = table.drop(values['_PIZZA_LIST_TABLE_'])
-            export_csv = delTable.to_csv(r'pizzaList.csv', index=None, header=True)
-            tableupdate(False)
-        else:
-            table = pd.read_csv("pizzaCustomers.csv")
-            delTable = table.drop(values['_ORDER_TABLE_'])
-            export_csv = delTable.to_csv(r'pizzaCustomers.csv', index=None, header=True)
-            tableupdate(True)
+    elif event == 'Delete' or 'Cut':
+        deltable()
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
 
