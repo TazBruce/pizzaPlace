@@ -1,6 +1,7 @@
 import csv
 import PySimpleGUI as sg
 import pandas as pd
+import sys
 
 pizzaList = []
 price = 0
@@ -21,16 +22,19 @@ def wipetab(tab):
 
 # Function that checks what tab the user is on, then deletes the currently selected row on that tab
 def deltable():
-    if values['_TAB_GROUP_'] == 'Create Pizza':
-        table = pd.read_csv("pizzaList.csv")
-        deltable = table.drop(values['_PIZZA_LIST_TABLE_'])
-        export_csv = deltable.to_csv(r'pizzaList.csv', index=None, header=True)
-        tableupdate(False)
-    else:
-        table = pd.read_csv("pizzaCustomers.csv")
-        delTable = table.drop(values['_ORDER_TABLE_'])
-        export_csv = delTable.to_csv(r'pizzaCustomers.csv', index=None, header=True)
-        tableupdate(True)
+    try:
+        if values['_TAB_GROUP_'] == 'Create Pizza':
+            table = pd.read_csv("pizzaList.csv")
+            deltable = table.drop(values['_PIZZA_LIST_TABLE_'])
+            export_csv = deltable.to_csv(r'pizzaList.csv', index=None, header=True)
+            tableupdate(False)
+        else:
+            table = pd.read_csv("pizzaCustomers.csv")
+            delTable = table.drop(values['_ORDER_TABLE_'])
+            export_csv = delTable.to_csv(r'pizzaCustomers.csv', index=None, header=True)
+            tableupdate(True)
+    except:
+        sys.exit(0)
 
 
 # Function that checks value for set parameters
@@ -188,13 +192,12 @@ while True:
         window.element("_COST_").Update(value=price)
     elif event == 'Delete' or 'Cut':
         deltable()
+    elif values[0]:
+        window.element("_ADDRESS_").Update(disabled=False)
+    elif not values[0]:
+        window.element("_ADDRESS_").Update(disabled=True, value='')
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
-    if values[0]:
-        window.element("_ADDRESS_").Update(disabled=False)
-    else:
-        window.element("_ADDRESS_").Update(disabled=True, value='')
-
 window.close()
 
 # valuecheck(variable,True = String/False = Integer,minimum,maximum)
