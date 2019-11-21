@@ -1,12 +1,21 @@
 import csv
-
 import PySimpleGUI as sg
 import pandas as pd
 
 pizzaList = []
+price = 0
 
 
-# price = 0
+def wipetab(tab):
+    if tab == 'Create Order':
+        window.element("_FIRST_NAME_").Update(value='')
+        window.element("_LAST_NAME_").Update(value='')
+        window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
+        window.element("_ADDRESS_").Update(disabled=True, value='')
+
+    else:
+        window.element("_PIZZA_").Update(value='')
+        window.element("_PRICE_").Update(value='')
 
 
 # Function that checks what tab the user is on, then deletes the currently selected row on that tab
@@ -65,7 +74,9 @@ def tableupdate(customertable):
             window.element('_PIZZA_LIST_TABLE_').Update(values=data, num_rows=min(len(data), 20))
 
 
-def addpizza(add):
+# Function that adds selected order on current table to list which can then update gui
+# Also calculates total cost
+def addpizza(add, cost):
     if add:
         with open('pizzaList.csv', 'r', newline='') as pizzaFile:
             reader = csv.reader(pizzaFile)
@@ -73,11 +84,13 @@ def addpizza(add):
             rowNum = int(str(values['_PIZZA_TABLE_']).strip('[]'))  # row number selected from table and remove brackets
             rowNum += 1  # skip header row
             pizza = rows[rowNum]
+            cost += int(pizza[1])
             pizzaList.append(pizza[0])
             window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
-            # price += int(pizza[1])
+            return cost
     else:
         window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
+        return cost
 
 
 with open('pizzaCustomers.csv', "r") as CustomerTable:
@@ -93,8 +106,8 @@ with open('pizzaList.csv', "r") as PizzaTable:
 sg.ChangeLookAndFeel('Reds')
 
 tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
-               [sg.T('First Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0))],
-               [sg.T('Last Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0))],
+               [sg.T('First Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0), key="_FIRST_NAME_")],
+               [sg.T('Last Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0), key="_LAST_NAME_")],
                [sg.T('Add Pizza', size=(10, 0)), sg.VerticalSeparator(pad=(7, 0)),
                 sg.Table(
                     values=pizzaData,
@@ -106,8 +119,11 @@ tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                [sg.T('Total Pizzas', size=(10, 0)), sg.VerticalSeparator(pad=None),
                 sg.Listbox(values=[], size=(17, 0), key="_TOTAL_PIZZA_"),
                 sg.Button('Remove', size=(5, 0))],
-               [sg.T('Delivery?', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Checkbox(''), sg.T('Total Cost'),
-                sg.T('$')],
+               [sg.T('Delivery?', size=(10, 0)), sg.VerticalSeparator(pad=None),
+                sg.Checkbox('', enable_events=True), sg.T('Total Cost'),
+                sg.T('$', key="_COST_", size=(4, 0))],
+               [sg.T('Street Address', size=(10, 0)), sg.VerticalSeparator(pad=None),
+                sg.Input(size=(20, 0), disabled=True, key="_ADDRESS_")],
                [sg.Button("Confirm")]
                ]
 tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold')],
@@ -121,8 +137,8 @@ tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold')],
                [sg.Button('Delete')]
                ]
 tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
-               [sg.T('Pizza Name  '), sg.Input(size=(23, 1))],
-               [sg.T('Price            '), sg.Input(size=(23, 1))],
+               [sg.T('Pizza Name  '), sg.Input(size=(23, 1), key="_PIZZA_")],
+               [sg.T('Price            '), sg.Input(size=(23, 1), key="_PRICE_")],
                [sg.Button('Create')],
                [sg.Table(
                    values=pizzaData,
@@ -146,22 +162,37 @@ while True:
     if event == 'Confirm':
         with open('pizzaCustomers.csv', "a", newline='') as newFile:
             writer = csv.writer(newFile)
-            writer.writerow([values[0], values[1], str(pizzaList).strip('[]'), values[2], values[4]])
+            if values[0]:
+                delivery = 'Yes'
+            else:
+                delivery = 'No'
+            writer.writerow([values['_FIRST_NAME_'], values['_LAST_NAME_'], str(pizzaList).strip('[]'), delivery,
+                             str(values['_ADDRESS_']).strip('[,]'), price])
         tableupdate(True)
+        pizzaList = []
+        wipetab(str(values['_TAB_GROUP_']))
     elif event == 'Create':
         with open('pizzaList.csv', 'a', newline='') as pizzaFile:
             writer = csv.writer(pizzaFile)
-            writer.writerow([values[3], values[4]])
+            writer.writerow([values["_PIZZA_"], values["_PRICE_"]])
         tableupdate(False)
+        wipetab(str(values['_TAB_GROUP_']))
     elif event == 'Add':
-        addpizza(True)
+        price = addpizza(True, price)
+        print(price)
+        window.element("_COST_").Update(value=price)
     elif event == 'Remove':
         pizzaList = []
-        addpizza(False)
+        price = addpizza(False, 0)
+        window.element("_COST_").Update(value=price)
     elif event == 'Delete' or 'Cut':
         deltable()
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
+    if values[0]:
+        window.element("_ADDRESS_").Update(disabled=False)
+    else:
+        window.element("_ADDRESS_").Update(disabled=True, value='')
 
 window.close()
 

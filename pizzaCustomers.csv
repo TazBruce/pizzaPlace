@@ -1,2 +1,3 @@
-First Name,Last Name,Ordered Pizzas,Delivery,Total Cost
-mayville,wootton,"'Pepperoni', 'Ham & Cheese', 'Classic Cheese'",True,
+First Name,Last Name,Ordered Pizza(s),Delivery,Address,Total Cost
+Tasman,Bruce,'Pepperoni',Yes,288 Arapaepae Road,5
+Mayville,Wootton,"'Classic Cheese', 'Classic Veggie'",Yes,288 Arapaepae Road,11
