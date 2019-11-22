@@ -1,4 +1,2 @@
 First Name,Last Name,Ordered Pizza(s),Delivery,Address,Total Cost
-Tasman,Bruce,'Pepperoni',Yes,288 Arapaepae Road,5
-Mayville,Wootton,"'Classic Cheese', 'Classic Veggie'",Yes,288 Arapaepae Road,11
-Cathie,Bruce,"'Pepperoni', 'Classic Veggie'",Yes,288 Arapaepae Road,11
+firstname,lastname,'pizza',yes/no,address,price
