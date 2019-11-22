@@ -192,12 +192,14 @@ while True:
         window.element("_COST_").Update(value=price)
     elif event == 'Delete' or 'Cut':
         deltable()
-    elif values[0]:
-        window.element("_ADDRESS_").Update(disabled=False)
-    elif not values[0]:
-        window.element("_ADDRESS_").Update(disabled=True, value='')
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
+
+    # enables address section depending on delivery checkbox being ticked
+    if values[0]:
+        window.element('_ADDRESS_').Update(disabled=False)
+    elif not values[0]:
+        window.element('_ADDRESS_').Update(disabled=True)
 window.close()
 
 # valuecheck(variable,True = String/False = Integer,minimum,maximum)
