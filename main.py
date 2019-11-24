@@ -2,8 +2,7 @@ import csv
 import PySimpleGUI as sg
 import pandas as pd
 import sys
-import math
-
+import numpy as np
 
 pizzaList = []
 price = 0
@@ -11,9 +10,9 @@ shipping = False
 
 
 #  rounds number to 4.sf
-def roundup(n, decimals=0):
-    multiplier = 10 ** decimals
-    return math.ceil(n * multiplier) / multiplier
+def roundup(x):
+    return float(np.format_float_positional(x, precision=4, unique=False, fractional=False, trim='k'))
+
 
 # Function that wipes entire 'Create Order' and 'Create Pizza' tab once user has confirmed
 def wipetab(tab):
@@ -106,7 +105,7 @@ def addpizza(add, cost):
                 rowNum = int(str(values['_PIZZA_TABLE_']).strip('[]'))  # row number selected and remove brackets
                 rowNum += 1  # skip header row
                 pizza = rows[rowNum]
-                cost += int((pizza[1]).strip("$"))  # adds cost of selected row to cost variable
+                cost += float((pizza[1]).strip("$"))  # adds cost of selected row to cost variable
                 pizzaList.append(pizza[0])  # append pizza of selected row to pizza list variable
                 window.element('_TOTAL_PIZZA_').Update(values=pizzaList)  # update GUI list with new variable
                 return cost
@@ -117,7 +116,7 @@ def addpizza(add, cost):
                     for row in rows:  # for every row in the rows list
                         if (str(values['_TOTAL_PIZZA_']).strip("['']")) == row[0]:  # if pizza is equal to rows pizza
                             pizza = row[1]  # pizza is made equal to cost of current row
-                    cost -= int(pizza.strip("$"))
+                    cost -= float(pizza.strip("$"))
                     pizzaList.remove(str(values['_TOTAL_PIZZA_']).strip("['']"))  # removes selected pizza by string
                     window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
                     return cost
@@ -213,11 +212,11 @@ while True:
         wipetab(str(values['_TAB_GROUP_']))
     elif event == 'Add':
         price = addpizza(True, price)
-        price = roundup(price, 2)
+        price = roundup(price)
         window.element("_COST_").Update(value=("$"+str(price)))
     elif event == 'Remove':
         price = addpizza(False, price)
-        price = roundup(price, 2)
+        price = roundup(price)
         window.element('_COST_').Update(value=("$"+str(price)))
     elif event == 'Delete' or 'Cut':
         deltable()
@@ -227,16 +226,20 @@ while True:
     # enables address section depending on delivery checkbox being ticked
     # Also updates cost depending on delivery checkbox
     if values[0]:
-        shipping = True
-        price += 6.99
-        price = roundup(price, 2)
-        window.element('_ADDRESS_').Update(disabled=False)
-        window.element('_COST_').Update(value=("$"+str(price)))
+        charge = 6.99
+        if shipping:
+            print("Do nothing")
+        else:
+            shipping = True
+            price += charge
+            price = roundup(price)
+            window.element('_ADDRESS_').Update(disabled=False)
+            window.element('_COST_').Update(value=("$"+str(price)))
     else:
         if shipping:
-            price -= 6.99
+            price -= charge
             shipping = False
-        price = roundup(price, 2)
+        price = roundup(price)
         window.element('_ADDRESS_').Update(disabled=True)
         window.element('_COST_').Update(value=("$" + str(price)))
 window.close()
