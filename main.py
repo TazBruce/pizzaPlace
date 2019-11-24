@@ -2,30 +2,44 @@ import csv
 import PySimpleGUI as sg
 import pandas as pd
 import sys
+import math
+
 
 pizzaList = []
 price = 0
+shipping = False
 
 
+#  rounds number to 4.sf
+def roundup(n, decimals=0):
+    multiplier = 10 ** decimals
+    return math.ceil(n * multiplier) / multiplier
+
+# Function that wipes entire 'Create Order' and 'Create Pizza' tab once user has confirmed
 def wipetab(tab):
     if tab == 'Create Order':
         window.element("_FIRST_NAME_").Update(value='')
         window.element("_LAST_NAME_").Update(value='')
         window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
         window.element("_ADDRESS_").Update(disabled=True, value='')
-        sg.Popup('Order Created!', keep_on_top=True)
+        sg.Popup('Order Created!', keep_on_top=True, auto_close=True, auto_close_duration=1)
     else:
         window.element("_PIZZA_").Update(value='')
         window.element("_PRICE_").Update(value='')
-        sg.Popup('Pizza Created!', keep_on_top=True)
+        sg.Popup('Pizza Created!', keep_on_top=True, auto_close=True, auto_close_duration=1)
 
 
 # Function that checks what tab the user is on, then deletes the currently selected row on that tab
 def deltable():
+    # if tab variable is empty (most likely due to window closing) end program
     try:
+        # if user on 'Create Pizza' tab
         if values['_TAB_GROUP_'] == 'Create Pizza':
+            # pandas module reads csv file
             table = pd.read_csv("pizzaList.csv")
+            # variable is set to table but without the currently selected entry
             deltable = table.drop(values['_PIZZA_LIST_TABLE_'])
+            # overwrite pizzaList with new table
             export_csv = deltable.to_csv(r'pizzaList.csv', index=None, header=True)
             tableupdate(False)
         else:
@@ -81,20 +95,33 @@ def tableupdate(customertable):
 
 # Function that adds selected order on current table to list which can then update gui
 # Also calculates total cost
+# v2.0 update - added selective deletion for chosen pizzas
 def addpizza(add, cost):
-    if add:
+    # if no pizza is selected in table prevent crash
+    try:
         with open('pizzaList.csv', 'r', newline='') as pizzaFile:
             reader = csv.reader(pizzaFile)
             rows = list(reader)
-            rowNum = int(str(values['_PIZZA_TABLE_']).strip('[]'))  # row number selected from table and remove brackets
-            rowNum += 1  # skip header row
-            pizza = rows[rowNum]
-            cost += int(pizza[1])
-            pizzaList.append(pizza[0])
-            window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
-            return cost
-    else:
-        window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
+            if add:
+                rowNum = int(str(values['_PIZZA_TABLE_']).strip('[]'))  # row number selected and remove brackets
+                rowNum += 1  # skip header row
+                pizza = rows[rowNum]
+                cost += int((pizza[1]).strip("$"))  # adds cost of selected row to cost variable
+                pizzaList.append(pizza[0])  # append pizza of selected row to pizza list variable
+                window.element('_TOTAL_PIZZA_').Update(values=pizzaList)  # update GUI list with new variable
+                return cost
+            else:
+                if not values["_TOTAL_PIZZA_"]:  # if no pizza is selected
+                    return cost
+                else:
+                    for row in rows:  # for every row in the rows list
+                        if (str(values['_TOTAL_PIZZA_']).strip("['']")) == row[0]:  # if pizza is equal to rows pizza
+                            pizza = row[1]  # pizza is made equal to cost of current row
+                    cost -= int(pizza.strip("$"))
+                    pizzaList.remove(str(values['_TOTAL_PIZZA_']).strip("['']"))  # removes selected pizza by string
+                    window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
+                    return cost
+    except:
         return cost
 
 
@@ -122,11 +149,11 @@ tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                     justification='left',
                     num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_'), sg.Button('Add', size=(5, 0))],
                [sg.T('Total Pizzas', size=(10, 0)), sg.VerticalSeparator(pad=None),
-                sg.Listbox(values=[], size=(17, 0), key="_TOTAL_PIZZA_"),
+                sg.Listbox(values=[], size=(17, 0), key="_TOTAL_PIZZA_", enable_events=True),
                 sg.Button('Remove', size=(5, 0))],
                [sg.T('Delivery?', size=(10, 0)), sg.VerticalSeparator(pad=None),
                 sg.Checkbox('', enable_events=True), sg.T('Total Cost'),
-                sg.T('$', key="_COST_", size=(4, 0))],
+                sg.T('$0', key="_COST_", size=(5, 0))],
                [sg.T('Street Address', size=(10, 0)), sg.VerticalSeparator(pad=None),
                 sg.Input(size=(20, 0), disabled=True, key="_ADDRESS_")],
                [sg.Button("Confirm")]
@@ -172,34 +199,47 @@ while True:
             else:
                 delivery = 'No'
             writer.writerow([values['_FIRST_NAME_'], values['_LAST_NAME_'], str(pizzaList).strip('[]'), delivery,
-                             str(values['_ADDRESS_']).strip('[,]'), price])
+                             str(values['_ADDRESS_']).strip('[,]'), ("$"+str(price))])
         tableupdate(True)
         pizzaList = []
+        price = 0
+        window.element("_COST_").Update(value=("$"+str(price)))
         wipetab(str(values['_TAB_GROUP_']))
     elif event == 'Create':
         with open('pizzaList.csv', 'a', newline='') as pizzaFile:
             writer = csv.writer(pizzaFile)
-            writer.writerow([values["_PIZZA_"], values["_PRICE_"]])
+            writer.writerow([values["_PIZZA_"], ("$"+values["_PRICE_"])])
         tableupdate(False)
         wipetab(str(values['_TAB_GROUP_']))
     elif event == 'Add':
         price = addpizza(True, price)
-        print(price)
-        window.element("_COST_").Update(value=price)
+        price = roundup(price, 2)
+        window.element("_COST_").Update(value=("$"+str(price)))
     elif event == 'Remove':
-        pizzaList = []
-        price = addpizza(False, 0)
-        window.element("_COST_").Update(value=price)
+        price = addpizza(False, price)
+        price = roundup(price, 2)
+        window.element('_COST_').Update(value=("$"+str(price)))
     elif event == 'Delete' or 'Cut':
         deltable()
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
 
     # enables address section depending on delivery checkbox being ticked
+    # Also updates cost depending on delivery checkbox
     if values[0]:
+        shipping = True
+        price += 6.99
+        price = roundup(price, 2)
         window.element('_ADDRESS_').Update(disabled=False)
-    elif not values[0]:
+        window.element('_COST_').Update(value=("$"+str(price)))
+    else:
+        if shipping:
+            price -= 6.99
+            shipping = False
+        price = roundup(price, 2)
         window.element('_ADDRESS_').Update(disabled=True)
+        window.element('_COST_').Update(value=("$" + str(price)))
 window.close()
+
 
 # valuecheck(variable,True = String/False = Integer,minimum,maximum)
