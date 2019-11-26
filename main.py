@@ -10,6 +10,9 @@ shipping = False
 pizzaChoices = 0
 confirm = ""
 receipt = []
+test1 = False
+test2 = False
+test3 = False
 
 
 #  rounds number to 4.sf
@@ -230,30 +233,30 @@ while True:
         test2 = valuecheck(values['_LAST_NAME_'], True, 3, 15)
         test3 = valuecheck(values["_CONTACT_"], False, 8, 10)
         if test1 and test2 and test3:
-            with open('pizzaCustomers.csv', "a", newline='') as newFile:
-                writer = csv.writer(newFile)
-                if values[0]:
-                    delivery = 'Yes'
-                else:
-                    delivery = 'No'
-                writer.writerow([values['_FIRST_NAME_'], values['_LAST_NAME_'], values["_CONTACT_"],
-                                 str(pizzaList).strip('[]'),
-                                 delivery, str(values['_ADDRESS_']).strip('[,]'), ("$"+str(price))])
-            tableupdate(True)
-            if values[1]:
-                sg.Popup(('''Total Ordered Pizzas and Prices for {}
+            if values[0] and ((len(values['_ADDRESS_'])) < 5 or (len(values['_ADDRESS_'])) > 30):
+                sg.Popup("Failed to create order! Make sure your entries are the right length and type.",
+                         keep_on_top=True, auto_close=True, auto_close_duration=3)
+            else:
+                with open('pizzaCustomers.csv', "a", newline='') as newFile:
+                    writer = csv.writer(newFile)
+                    writer.writerow([values['_FIRST_NAME_'], values['_LAST_NAME_'], values["_CONTACT_"],
+                                    str(pizzaList).strip('[]'), ("Yes" if values[0] else "No"),
+                                    (str(values['_ADDRESS_']).strip('[,]')if values[0] else "N/A"), ("$"+str(price))])
+                tableupdate(True)
+                if values[1]:
+                    sg.Popup(('''Total Ordered Pizzas and Prices for {}
 ''' + (str(receipt)) + '''
 ''' + ("Delivery Charge of 6.99" if values[0] else ("Total Cost of "+str(price)))+'''
 ''' + (("Total Cost of $"+str(price)) if values[0] else "")
                           ).format(values['_FIRST_NAME_']+" "+values['_LAST_NAME_']+":"))
-            pizzaList = []
-            if values[0]:
-                price = 6.99
-            else:
-                price = 0
-            window.element("_COST_").Update(value=("$"+str(price)))
-            wipetab(str(values['_TAB_GROUP_']))
-            pizzaChoices = 0
+                pizzaList = []
+                if values[0]:
+                    price = 6.99
+                else:
+                    price = 0
+                window.element("_COST_").Update(value=("$"+str(price)))
+                wipetab(str(values['_TAB_GROUP_']))
+                pizzaChoices = 0
         else:
             sg.Popup("Failed to create order! Make sure your entries are the right length and type.",
                      keep_on_top=True, auto_close=True, auto_close_duration=3)
@@ -310,6 +313,6 @@ while True:
             price -= charge
             shipping = False
         price = roundup(price)
-        window.element('_ADDRESS_').Update(disabled=True)
+        window.element('_ADDRESS_').Update(disabled=True, value="")
         window.element('_COST_').Update(value=("$" + str(price)))
 window.close()
