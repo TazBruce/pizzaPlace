@@ -310,6 +310,6 @@ while True:
             price -= charge
             shipping = False
         price = roundup(price)
-        window.element('_ADDRESS_').Update(disabled=True)
+        window.element('_ADDRESS_').Update(disabled=True, value="")
         window.element('_COST_').Update(value=("$" + str(price)))
 window.close()
