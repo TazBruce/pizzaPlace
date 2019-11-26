@@ -7,6 +7,8 @@ import numpy as np
 pizzaList = []
 price = 0
 shipping = False
+pizzaChoices = 0
+confirm = ""
 
 
 #  rounds number to 4.sf
@@ -19,6 +21,7 @@ def wipetab(tab):
     if tab == 'Create Order':
         window.element("_FIRST_NAME_").Update(value='')
         window.element("_LAST_NAME_").Update(value='')
+        window.element("_CONTACT_").Update(value='')
         window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
         window.element("_ADDRESS_").Update(disabled=True, value='')
         sg.Popup('Order Created!', keep_on_top=True, auto_close=True, auto_close_duration=1)
@@ -55,24 +58,35 @@ def valuecheck(value, string, minimum, maximum):
     # If 'string' parameter is set to True test for character count
     if string:
         try:
-            # If string character count is between set range accept value
-            if minimum <= len(value) <= maximum:
-                print("ACCEPT STRING")
-            else:
-                print("POPUP")
-        # If function fails to test character count value is invalid
+            isnum = float(value)
+            return False
         except:
-            print("BREAK")
+            try:
+                # If string character count is between set range accept value
+                if minimum <= len(value) <= maximum:
+                    print("pass string length")
+                    return True
+                else:
+                    print("fail string length")
+                    return False
+            # If function fails to test character count value is invalid
+            except:
+                print("fail string")
+                return False
     # If 'string' parameter is set to False test that integer is between range
     else:
         try:
-            if minimum <= value <= maximum:
-                print("ACCEPT NUMBER")
+            isnum = float(value)
+            if minimum <= len(value) <= maximum:
+                print("pass int length")
+                return True
             else:
-                print("POPUP")
+                print("fail int length")
+                return False
         # If function fails to test value is between integer range value is invalid
         except:
-            print("BREAK")
+            print("fail int")
+            return False
 
 
 # Function that refreshes customer order table
@@ -137,8 +151,12 @@ with open('pizzaList.csv', "r") as PizzaTable:
 sg.ChangeLookAndFeel('Reds')
 
 tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
-               [sg.T('First Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0), key="_FIRST_NAME_")],
-               [sg.T('Last Name', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Input(size=(20, 0), key="_LAST_NAME_")],
+               [sg.T('First Name', size=(10, 0)), sg.VerticalSeparator(pad=None),
+                sg.Input(size=(20, 0), key="_FIRST_NAME_", tooltip="Allows 3 to 15 Characters")],
+               [sg.T('Last Name', size=(10, 0)), sg.VerticalSeparator(pad=None),
+                sg.Input(size=(20, 0), key="_LAST_NAME_", tooltip="Allows 3 to 15 Characters")],
+               [sg.T('Phone Number', size=(10, 0)), sg.VerticalSeparator(pad=None),
+                sg.Input(size=(20, 0), key="_CONTACT_", tooltip="Allows 8 to 10 Numbers")],
                [sg.T('Add Pizza', size=(10, 0)), sg.VerticalSeparator(pad=(7, 0)),
                 sg.Table(
                     values=pizzaData,
@@ -146,16 +164,16 @@ tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                     max_col_width=25,
                     auto_size_columns=True,
                     justification='left',
-                    num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_'), sg.Button('Add', size=(5, 0))],
+                    num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_', ), sg.Button('Add', size=(5, 0))],
                [sg.T('Total Pizzas', size=(10, 0)), sg.VerticalSeparator(pad=None),
                 sg.Listbox(values=[], size=(17, 0), key="_TOTAL_PIZZA_", enable_events=True),
                 sg.Button('Remove', size=(5, 0))],
                [sg.T('Delivery?', size=(10, 0)), sg.VerticalSeparator(pad=None),
-                sg.Checkbox('', enable_events=True), sg.T('Total Cost'),
-                sg.T('$0', key="_COST_", size=(5, 0))],
+                sg.Checkbox('', enable_events=True)],
                [sg.T('Street Address', size=(10, 0)), sg.VerticalSeparator(pad=None),
                 sg.Input(size=(20, 0), disabled=True, key="_ADDRESS_")],
-               [sg.Button("Confirm")]
+               [sg.T('Receipt?', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.Checkbox('', enable_events=True)],
+               [sg.T('Total Cost', size=(10, 0)), sg.VerticalSeparator(pad=None), sg.T('$0', key="_COST_", size=(5, 0)), sg.Button("Confirm")]
                ]
 tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold')],
                [sg.Table(
@@ -191,38 +209,64 @@ while True:
     event, values = window.Read()
     print(values)
     if event == 'Confirm':
-        with open('pizzaCustomers.csv', "a", newline='') as newFile:
-            writer = csv.writer(newFile)
-            if values[0]:
-                delivery = 'Yes'
-            else:
-                delivery = 'No'
-            writer.writerow([values['_FIRST_NAME_'], values['_LAST_NAME_'], str(pizzaList).strip('[]'), delivery,
-                             str(values['_ADDRESS_']).strip('[,]'), ("$"+str(price))])
-        tableupdate(True)
-        pizzaList = []
-        price = 0
-        window.element("_COST_").Update(value=("$"+str(price)))
-        wipetab(str(values['_TAB_GROUP_']))
+        test1 = valuecheck(values['_FIRST_NAME_'], True, 3, 15)
+        test2 = valuecheck(values['_LAST_NAME_'], True, 3, 15)
+        test3 = valuecheck(values["_CONTACT_"], False, 8, 10)
+        if test1 and test2 and test3:
+            with open('pizzaCustomers.csv', "a", newline='') as newFile:
+                writer = csv.writer(newFile)
+                if values[0]:
+                    delivery = 'Yes'
+                else:
+                    delivery = 'No'
+                writer.writerow([values['_FIRST_NAME_'], values['_LAST_NAME_'], values["_CONTACT_"],
+                                 str(pizzaList).strip('[]'),
+                                 delivery, str(values['_ADDRESS_']).strip('[,]'), ("$"+str(price))])
+            tableupdate(True)
+            pizzaList = []
+            price = 0
+            window.element("_COST_").Update(value=("$"+str(price)))
+            wipetab(str(values['_TAB_GROUP_']))
+        else:
+            sg.popup("Failed to create order! Make sure your entries are the right length and type.")
     elif event == 'Create':
-        with open('pizzaList.csv', 'a', newline='') as pizzaFile:
-            writer = csv.writer(pizzaFile)
-            writer.writerow([values["_PIZZA_"], ("$"+values["_PRICE_"])])
-        tableupdate(False)
-        wipetab(str(values['_TAB_GROUP_']))
+        test1 = valuecheck(values['_PIZZA_'], True, 5, 15)
+        test2 = valuecheck(values['_PRICE_'], False, 1, 3)
+        if test1 and test2:
+            with open('pizzaList.csv', 'a', newline='') as pizzaFile:
+                writer = csv.writer(pizzaFile)
+                pizzaCost = float(values["_PRICE_"])
+                writer.writerow([values["_PIZZA_"], ("$"+str(pizzaCost))])
+            tableupdate(False)
+            wipetab(str(values['_TAB_GROUP_']))
+        else:
+            sg.popup("Failed to create pizza! Make sure your entries are the right length and type.")
     elif event == 'Add':
-        price = addpizza(True, price)
-        price = roundup(price)
-        window.element("_COST_").Update(value=("$"+str(price)))
+        if pizzaChoices < 5:
+            price = addpizza(True, price)
+            price = roundup(price)
+            pizzaChoices += 1
+            window.element("_COST_").Update(value=("$"+str(price)))
+        else:
+            sg.popup("Too many pizzas have been selected!", keep_on_top=True, auto_close=True, auto_close_duration=1)
     elif event == 'Remove':
-        price = addpizza(False, price)
-        price = roundup(price)
-        window.element('_COST_').Update(value=("$"+str(price)))
-    elif event == 'Delete' or 'Cut':
-        deltable()
+        if pizzaChoices > 0:
+            price = addpizza(False, price)
+            price = roundup(price)
+            pizzaChoices -= 1
+            window.element('_COST_').Update(value=("$"+str(price)))
+        else:
+            sg.popup("There are currently no selected pizzas!",
+                     keep_on_top=True, auto_close=True, auto_close_duration=1, )
+    elif event == 'Delete' or event == 'Cut':
+        confirm = sg.popup_ok_cancel('Are you sure you want to remove this entry?', keep_on_top=True)
+        if confirm == "OK":
+            deltable()
+            sg.popup("Successfully deleted!", keep_on_top=True, auto_close=True, auto_close_duration=1)
+        else:
+            print("Cancelled")
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
-
     # enables address section depending on delivery checkbox being ticked
     # Also updates cost depending on delivery checkbox
     if values[0]:
