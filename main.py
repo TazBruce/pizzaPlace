@@ -9,6 +9,7 @@ price = 0
 shipping = False
 pizzaChoices = 0
 confirm = ""
+receipt = []
 
 
 #  rounds number to 4.sf
@@ -23,7 +24,7 @@ def wipetab(tab):
         window.element("_LAST_NAME_").Update(value='')
         window.element("_CONTACT_").Update(value='')
         window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
-        window.element("_ADDRESS_").Update(disabled=True, value='')
+        window.element("_ADDRESS_").Update(value='')
         sg.Popup('Order Created!', keep_on_top=True, auto_close=True, auto_close_duration=1)
     else:
         window.element("_PIZZA_").Update(value='')
@@ -49,7 +50,7 @@ def deltable():
                 # overwrite pizzaList with new table
                 export_csv = deltable.to_csv(r'pizzaList.csv', index=None, header=True)
                 tableupdate(False)
-                sg.popup("Successfully deleted!", keep_on_top=True, auto_close=True, auto_close_duration=1)
+                sg.Popup("Successfully deleted!", keep_on_top=True, auto_close=True, auto_close_duration=0.5)
         else:
             table = pd.read_csv("pizzaCustomers.csv")
             numrows = len(table)
@@ -60,7 +61,7 @@ def deltable():
                 delTable = table.drop(values['_ORDER_TABLE_'])
                 export_csv = delTable.to_csv(r'pizzaCustomers.csv', index=None, header=True)
                 tableupdate(True)
-                sg.popup("Successfully deleted!", keep_on_top=True, auto_close=True, auto_close_duration=1)
+                sg.popup("Successfully deleted!", keep_on_top=True, auto_close=True, auto_close_duration=0.5)
     except:
         sys.exit(0)
 
@@ -133,6 +134,7 @@ def addpizza(add, cost):
                 pizza = rows[rowNum]
                 cost += float((pizza[1]).strip("$"))  # adds cost of selected row to cost variable
                 pizzaList.append(pizza[0])  # append pizza of selected row to pizza list variable
+                receipt.append([pizza[0], pizza[1]])
                 window.element('_TOTAL_PIZZA_').Update(values=pizzaList)  # update GUI list with new variable
                 return cost
             else:
@@ -178,10 +180,9 @@ tab1_layout = [[sg.T('Add Order', font='sfprodisplay 25 bold')],
                 sg.Table(
                     values=pizzaData,
                     headings=pizzaHeaderList,
-                    max_col_width=25,
-                    auto_size_columns=True,
+                    auto_size_columns=False,
                     justification='left',
-                    num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_', ), sg.Button('Add', size=(5, 0))],
+                    num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_'), sg.Button('Add', size=(5, 0))],
                [sg.T('Total Pizzas', size=(10, 0)), sg.VerticalSeparator(pad=None),
                 sg.Listbox(values=[], size=(17, 0), key="_TOTAL_PIZZA_", enable_events=True),
                 sg.Button('Remove', size=(5, 0))],
@@ -209,7 +210,6 @@ tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
                [sg.Table(
                    values=pizzaData,
                    headings=pizzaHeaderList,
-                   max_col_width=25,
                    auto_size_columns=True,
                    justification='left',
                    num_rows=min(len(pizzaData), 20), key='_PIZZA_LIST_TABLE_')],
@@ -220,7 +220,7 @@ layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout),
                          sg.Tab('Create Pizza', tab3_layout)]
                         ], key="_TAB_GROUP_", selected_title_color='red', title_color='black', enable_events=True)]]
 
-window = sg.Window('pizzaPlace', layout, default_element_size=(20, 1), resizable=True).finalize()
+window = sg.Window('pizzaPlace', layout, default_element_size=(20, 1), resizable=True,).finalize()
 
 while True:
     event, values = window.Read()
@@ -240,12 +240,22 @@ while True:
                                  str(pizzaList).strip('[]'),
                                  delivery, str(values['_ADDRESS_']).strip('[,]'), ("$"+str(price))])
             tableupdate(True)
+            if values[1]:
+                sg.Popup(('''Total Ordered Pizzas and Prices for {}
+''' + (str(receipt)) + '''
+''' + ("Delivery Charge of 6.99" if values[0] else ("Total Cost of "+str(price)))+'''
+''' + (("Total Cost of $"+str(price)) if values[0] else "")
+                          ).format(values['_FIRST_NAME_']+" "+values['_LAST_NAME_']+":"))
             pizzaList = []
-            price = 0
+            if values[0]:
+                price = 6.99
+            else:
+                price = 0
             window.element("_COST_").Update(value=("$"+str(price)))
             wipetab(str(values['_TAB_GROUP_']))
+            pizzaChoices = 0
         else:
-            sg.popup("Failed to create order! Make sure your entries are the right length and type.",
+            sg.Popup("Failed to create order! Make sure your entries are the right length and type.",
                      keep_on_top=True, auto_close=True, auto_close_duration=3)
     elif event == 'Create':
         test1 = valuecheck(values['_PIZZA_'], True, 4, 15)
@@ -264,6 +274,7 @@ while True:
         if pizzaChoices < 5:
             price = addpizza(True, price)
             price = roundup(price)
+            print(receipt)
             if price > 0:
                 pizzaChoices += 1
                 window.element("_COST_").Update(value=("$" + str(price)))
@@ -302,6 +313,3 @@ while True:
         window.element('_ADDRESS_').Update(disabled=True)
         window.element('_COST_').Update(value=("$" + str(price)))
 window.close()
-
-
-# valuecheck(variable,True = String/False = Integer,minimum,maximum)
