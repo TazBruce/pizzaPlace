@@ -39,16 +39,28 @@ def deltable():
         if values['_TAB_GROUP_'] == 'Create Pizza':
             # pandas module reads csv file
             table = pd.read_csv("pizzaList.csv")
-            # variable is set to table but without the currently selected entry
-            deltable = table.drop(values['_PIZZA_LIST_TABLE_'])
-            # overwrite pizzaList with new table
-            export_csv = deltable.to_csv(r'pizzaList.csv', index=None, header=True)
-            tableupdate(False)
+            numrows = len(table)
+            if numrows < 2:
+                sg.PopupOK("You must have one row at all times!",
+                           keep_on_top=True, auto_close=True, auto_close_duration=1)
+            else:
+                # variable is set to table but without the currently selected entry
+                deltable = table.drop(values['_PIZZA_LIST_TABLE_'])
+                # overwrite pizzaList with new table
+                export_csv = deltable.to_csv(r'pizzaList.csv', index=None, header=True)
+                tableupdate(False)
+                sg.popup("Successfully deleted!", keep_on_top=True, auto_close=True, auto_close_duration=1)
         else:
             table = pd.read_csv("pizzaCustomers.csv")
-            delTable = table.drop(values['_ORDER_TABLE_'])
-            export_csv = delTable.to_csv(r'pizzaCustomers.csv', index=None, header=True)
-            tableupdate(True)
+            numrows = len(table)
+            if numrows < 2:
+                sg.PopupOK("You must have one row at all times!",
+                           keep_on_top=True, auto_close=True, auto_close_duration=1)
+            else:
+                delTable = table.drop(values['_ORDER_TABLE_'])
+                export_csv = delTable.to_csv(r'pizzaCustomers.csv', index=None, header=True)
+                tableupdate(True)
+                sg.popup("Successfully deleted!", keep_on_top=True, auto_close=True, auto_close_duration=1)
     except:
         sys.exit(0)
 
@@ -142,11 +154,16 @@ with open('pizzaCustomers.csv', "r") as CustomerTable:
     customerReader = csv.reader(CustomerTable)
     customerHeaderList = next(customerReader)
     customerData = list(customerReader)  # read everything else into a list of rows
+    if not customerData:
+        customerData = [['', '', '', '', '', '', '']]
+
 
 with open('pizzaList.csv', "r") as PizzaTable:
     pizzaReader = csv.reader(PizzaTable)
     pizzaHeaderList = next(pizzaReader)
     pizzaData = list(pizzaReader)  # read everything else into a list of rows
+    if not pizzaData:
+        pizzaData = [['          ', '   ']]
 
 sg.ChangeLookAndFeel('Reds')
 
@@ -186,8 +203,8 @@ tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold')],
                [sg.Button('Delete')]
                ]
 tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
-               [sg.T('Pizza Name  '), sg.Input(size=(23, 1), key="_PIZZA_")],
-               [sg.T('Price            '), sg.Input(size=(23, 1), key="_PRICE_")],
+               [sg.T('Pizza', size=(6, 0)), sg.Input(size=(15, 0), key="_PIZZA_", tooltip="Allows 4 to 15 Characters")],
+               [sg.T('Price', size=(6, 0)), sg.Input(size=(15, 0), key="_PRICE_", tooltip="Allows 1 to 3 Numbers")],
                [sg.Button('Create')],
                [sg.Table(
                    values=pizzaData,
@@ -203,7 +220,7 @@ layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout),
                          sg.Tab('Create Pizza', tab3_layout)]
                         ], key="_TAB_GROUP_", selected_title_color='red', title_color='black', enable_events=True)]]
 
-window = sg.Window('pizzaPlace', layout, default_element_size=(20, 1))
+window = sg.Window('pizzaPlace', layout, default_element_size=(20, 1), resizable=True).finalize()
 
 while True:
     event, values = window.Read()
@@ -228,10 +245,11 @@ while True:
             window.element("_COST_").Update(value=("$"+str(price)))
             wipetab(str(values['_TAB_GROUP_']))
         else:
-            sg.popup("Failed to create order! Make sure your entries are the right length and type.")
+            sg.popup("Failed to create order! Make sure your entries are the right length and type.",
+                     keep_on_top=True, auto_close=True, auto_close_duration=3)
     elif event == 'Create':
-        test1 = valuecheck(values['_PIZZA_'], True, 5, 15)
-        test2 = valuecheck(values['_PRICE_'], False, 1, 3)
+        test1 = valuecheck(values['_PIZZA_'], True, 4, 15)
+        test2 = valuecheck(values['_PRICE_'], False, 1, 4)
         if test1 and test2:
             with open('pizzaList.csv', 'a', newline='') as pizzaFile:
                 writer = csv.writer(pizzaFile)
@@ -240,13 +258,15 @@ while True:
             tableupdate(False)
             wipetab(str(values['_TAB_GROUP_']))
         else:
-            sg.popup("Failed to create pizza! Make sure your entries are the right length and type.")
+            sg.popup("Failed to create pizza! Make sure your entries are the right length and type.",
+                     keep_on_top=True, auto_close=True, auto_close_duration=3)
     elif event == 'Add':
         if pizzaChoices < 5:
             price = addpizza(True, price)
             price = roundup(price)
-            pizzaChoices += 1
-            window.element("_COST_").Update(value=("$"+str(price)))
+            if price > 0:
+                pizzaChoices += 1
+                window.element("_COST_").Update(value=("$" + str(price)))
         else:
             sg.popup("Too many pizzas have been selected!", keep_on_top=True, auto_close=True, auto_close_duration=1)
     elif event == 'Remove':
@@ -262,23 +282,18 @@ while True:
         confirm = sg.popup_ok_cancel('Are you sure you want to remove this entry?', keep_on_top=True)
         if confirm == "OK":
             deltable()
-            sg.popup("Successfully deleted!", keep_on_top=True, auto_close=True, auto_close_duration=1)
-        else:
-            print("Cancelled")
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
         break
     # enables address section depending on delivery checkbox being ticked
     # Also updates cost depending on delivery checkbox
     if values[0]:
         charge = 6.99
-        if shipping:
-            print("Do nothing")
-        else:
+        if not shipping:
             shipping = True
             price += charge
             price = roundup(price)
             window.element('_ADDRESS_').Update(disabled=False)
-            window.element('_COST_').Update(value=("$"+str(price)))
+            window.element('_COST_').Update(value=("$" + str(price)))
     else:
         if shipping:
             price -= charge
