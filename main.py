@@ -114,14 +114,14 @@ def tableupdate(customertable):
             reader = csv.reader(inFile)
             next(reader, None)  # skips header row
             data = list(reader)  # read everything else into a list of rows
-            window.element('_ORDER_TABLE_').Update(values=data, num_rows=min(len(data), 20))  # update table on GUI
+            window.element('_ORDER_TABLE_').Update(values=data)  # update table on GUI
     else:
         with open('pizzaList.csv', "r") as inFile:
             reader = csv.reader(inFile)
             next(reader, None)
             data = list(reader)  # read everything else into a list of rows
-            window.element('_PIZZA_TABLE_').Update(values=data, num_rows=min(len(data), 20))
-            window.element('_PIZZA_LIST_TABLE_').Update(values=data, num_rows=min(len(data), 20))
+            window.element('_PIZZA_TABLE_').Update(values=data)
+            window.element('_PIZZA_LIST_TABLE_').Update(values=data)
 
 
 # Function that adds selected order on current table to list which can then update gui
@@ -130,7 +130,7 @@ def tableupdate(customertable):
 def addpizza(add, cost):
     # if no pizza is selected in table prevent crash
     try:
-        with open('pizzaList.csv', 'r', newline='') as pizzaFile:
+        with open('pizzaList.csv', 'r') as pizzaFile:
             reader = csv.reader(pizzaFile)
             rows = list(reader)
             if add:
@@ -164,71 +164,82 @@ with open('pizzaCustomers.csv', "r") as CustomerTable:
     if not customerData:
         customerData = [['', '', '', '', '', '', '']]
 
-
 with open('pizzaList.csv', "r") as PizzaTable:
     pizzaReader = csv.reader(PizzaTable)
     pizzaHeaderList = next(pizzaReader)
     pizzaData = list(pizzaReader)  # read everything else into a list of rows
     if not pizzaData:
-        pizzaData = [['          ', '   ']]
+        pizzaData = [['          ', '   '], ['          ', '   '],
+                     ['          ', '   '], ['          ', '   '],
+                     ['          ', '   ']]
 
 sg.ChangeLookAndFeel('DarkRed1')
 sg.SetGlobalIcon('logo.ico')
 
-frame1_layout = [[sg.T('Create Order', font='sfprodisplay 25 bold')],
-               [sg.T('First Name', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                sg.Input(size=(20, 0), key="_FIRST_NAME_", tooltip="Allows 3 to 15 Characters")],
-               [sg.T('Last Name', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                sg.Input(size=(20, 0), key="_LAST_NAME_", tooltip="Allows 3 to 15 Characters")],
-               [sg.T('Phone Number', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                sg.Input(size=(20, 0), key="_CONTACT_", tooltip="Allows 8 to 10 Numbers")],
-               [sg.T('Delivery?', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                sg.Checkbox('', enable_events=True)],
-               [sg.T('Street Address', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                sg.Input(size=(20, 0), disabled=True, key="_ADDRESS_")],
-               [sg.T('Receipt?', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                sg.Checkbox('', enable_events=True)]]
-frame2_layout = [[sg.T('Add Pizza', font='sfprodisplay 25 bold')],
+frame1_layout = [[sg.T('Customer Details', font='sfprodisplay 20 bold', pad=(0, 10))],
+                 [sg.T('First Name', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                  sg.Input(size=(28, 0), key="_FIRST_NAME_", tooltip="Allows 3 to 15 Characters")],
+                 [sg.T('Last Name', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                  sg.Input(size=(28, 0), key="_LAST_NAME_", tooltip="Allows 3 to 15 Characters")],
+                 [sg.T('Phone Number', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                  sg.Input(size=(28, 0), key="_CONTACT_", tooltip="Allows 8 to 10 Numbers")],
+                 [sg.T('Delivery? ($6.99)', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                  sg.Checkbox('', enable_events=True)],
+                 [sg.T('Street Address', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                  sg.Input(size=(28, 0), disabled=True, key="_ADDRESS_", tooltip="Allows 5 to 30 Characters")],
+                 [sg.T(" ", size=(0, 5))]]
+frame2_layout = [[sg.T('Add Pizza', font='sfprodisplay 20 bold', justification='center')],
                  [sg.T('Choose Pizza', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                sg.Table(
-                    values=pizzaData,
-                    headings=pizzaHeaderList,
-                    auto_size_columns=False,
-                    justification='left',
-                    num_rows=min(len(pizzaData), 20), key='_PIZZA_TABLE_'), sg.Button('Add')],
-               [sg.T('Total Pizzas', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                sg.Listbox(values=[], size=(18, 0), key="_TOTAL_PIZZA_", enable_events=True),
-                sg.Button('Remove')]
-]
-tab1_layout = [[sg.Frame("", frame1_layout), sg.Frame("", frame2_layout), ], [sg.T('Total Cost', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-            sg.T('$0.00', key="_COST_", size=(5, 0)), sg.Button("Confirm")]]
-tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold')],
+                  sg.Table(
+                      values=pizzaData,
+                      headings=pizzaHeaderList,
+                      auto_size_columns=False,
+                      justification='left',
+                      num_rows=3, key='_PIZZA_TABLE_', hide_vertical_scroll=False),
+                  sg.T(" "), sg.Button('Add', size=(7, 0), pad=(5, 0))],
+                 [sg.T('Total Pizzas', size=(12, 0), font='Helvetica 11 bold'),
+                  sg.VerticalSeparator(pad=None),
+                  sg.Listbox(values=[], size=(24, 5), key="_TOTAL_PIZZA_", enable_events=True),
+                  sg.T(""), sg.Button('Remove')],
+                 [sg.T('Total Cost', size=(12, 0), font='Helvetica 11 bold'),
+                  sg.VerticalSeparator(pad=None), sg.T('$0.00', key="_COST_", size=(6, 0))],
+                 [sg.T('Receipt?', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                  sg.Checkbox('', enable_events=True)]]
+tab1_layout = [[sg.T('Create Order', font='sfprodisplay 25 bold', justification='center', size=(42, 0))],
+               [sg.Frame("", frame1_layout, border_width=0), sg.Frame("", frame2_layout, border_width=0)],
+               [sg.Button("Confirm Order                     ", size=(103, 0))]]
+tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold', justification='center', size=(48, 0))],
                [sg.Table(
                    values=customerData,
                    headings=customerHeaderList,
                    max_col_width=25,
                    auto_size_columns=True,
                    justification='left',
-                   num_rows=min(len(customerData), 20), key='_ORDER_TABLE_')],
-               [sg.Button('Delete')]
+                   num_rows=15, key='_ORDER_TABLE_')],
+               [sg.Button('Delete', size=(106, 0), pad=(0, 0))]
                ]
-tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold')],
-               [sg.T('Pizza', size=(6, 0), font='Helvetica 11 bold'), sg.Input(size=(15, 0), key="_PIZZA_", tooltip="Allows 4 to 15 Characters")],
-               [sg.T('Price', size=(6, 0), font='Helvetica 11 bold'), sg.Input(size=(15, 0), key="_PRICE_", tooltip="Allows 1 to 3 Numbers")],
-               [sg.Button('Create')],
-               [sg.Table(
-                   values=pizzaData,
-                   headings=pizzaHeaderList,
-                   auto_size_columns=True,
-                   justification='left',
-                   num_rows=min(len(pizzaData), 20), key='_PIZZA_LIST_TABLE_')],
-               [sg.Button('Cut')]
-               ]
+frame3_layout = [[sg.T('Pizza', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                  sg.Input(size=(15, 0), key="_PIZZA_", tooltip="Allows 4 to 15 Characters", pad=(5, 0))],
+                 [sg.T('Price', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                  sg.Input(size=(15, 0), key="_PRICE_", tooltip="Allows 1 to 3 Numbers and 1 Decimal")],
+                 [sg.T(" ", size=(0, 3))], [sg.Button('Create')]]
+frame4_layout = [[sg.Table(
+    values=pizzaData,
+    headings=pizzaHeaderList,
+    auto_size_columns=False,
+    justification='left',
+    num_rows=5, key='_PIZZA_LIST_TABLE_')],
+    [sg.Button('Cut')]]
+tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold', justification='center', size=(24, 0), pad=(0, 0))],
+               [sg.Frame("", frame3_layout, border_width=0, pad=(0, 0)),
+                sg.Frame("", frame4_layout, border_width=0, pad=(0, 0))]]
 
-layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout),
-                         sg.Tab('Total Orders', tab2_layout),
-                         sg.Tab('Create Pizza', tab3_layout)]
-                        ], key="_TAB_GROUP_", selected_title_color='red', title_color='black', enable_events=True)]]
+layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout, pad=(0, 0)),
+                         sg.Tab('Total Orders', tab2_layout, pad=(0, 0)),
+                         sg.Tab('Create Pizza', tab3_layout,
+                                pad=(0, 0), element_justification='center')]
+                        ], key="_TAB_GROUP_", selected_title_color='red', title_color='black',
+                       enable_events=True, pad=(0, 0))]]
 
 window = sg.Window('PizzaPlace', layout,
                    default_element_size=(20, 1), resizable=True, font="Helvetica").finalize()
@@ -236,7 +247,7 @@ window = sg.Window('PizzaPlace', layout,
 while True:
     event, values = window.Read()
     print(values)
-    if event == 'Confirm':
+    if event == 'Confirm Order                     ':
         test1 = valuecheck(values['_FIRST_NAME_'], True, 3, 15)
         test2 = valuecheck(values['_LAST_NAME_'], True, 3, 15)
         test3 = valuecheck(values["_CONTACT_"], False, 8, 10)
@@ -247,22 +258,23 @@ while True:
             else:
                 with open('pizzaCustomers.csv', "a", newline='') as newFile:
                     writer = csv.writer(newFile)
-                    writer.writerow([values['_FIRST_NAME_'], values['_LAST_NAME_'], values["_CONTACT_"],
-                                    str(pizzaList).strip('[]'), ("Yes" if values[0] else "No"),
-                                    (str(values['_ADDRESS_']).strip('[,]')if values[0] else "N/A"), ("$"+str(price))])
+                    writer.writerow([values['_FIRST_NAME_'].capitalize(), values['_LAST_NAME_'].capitalize(),
+                                     values["_CONTACT_"], str(pizzaList).strip('[]'), ("Yes" if values[0] else "No"),
+                                     (str(values['_ADDRESS_']).strip('[,]') if values[0] else "N/A"),
+                                     ("$" + str(price))])
                 tableupdate(True)
                 if values[1]:
                     sg.Popup(('''Total Ordered Pizzas and Prices for {}
 ''' + (str(receipt)) + '''
-''' + ("Delivery Charge of 6.99" if values[0] else ("Total Cost of "+str(price)))+'''
-''' + (("Total Cost of $"+str(price)) if values[0] else "")
-                          ).format(values['_FIRST_NAME_']+" "+values['_LAST_NAME_']+":"), title='PizzaPlace')
+''' + ("Delivery Charge of 6.99" if values[0] else ("Total Cost of " + str(price))) + '''
+''' + (("Total Cost of $" + str(price)) if values[0] else "")
+                              ).format(values['_FIRST_NAME_'] + " " + values['_LAST_NAME_'] + ":"), title='PizzaPlace')
                 pizzaList = []
                 if values[0]:
                     price = 6.99
                 else:
                     price = 0
-                window.element("_COST_").Update(value=("$"+str(price)))
+                window.element("_COST_").Update(value=("$" + str(price)))
                 wipetab(str(values['_TAB_GROUP_']))
                 pizzaChoices = 0
         else:
@@ -272,12 +284,23 @@ while True:
         test1 = valuecheck(values['_PIZZA_'], True, 4, 15)
         test2 = valuecheck(values['_PRICE_'], False, 1, 4)
         if test1 and test2:
-            with open('pizzaList.csv', 'a', newline='') as pizzaFile:
-                writer = csv.writer(pizzaFile)
-                pizzaCost = float(values["_PRICE_"])
-                writer.writerow([values["_PIZZA_"], ("$"+str(pizzaCost))])
-            tableupdate(False)
-            wipetab(str(values['_TAB_GROUP_']))
+            with open('pizzaList.csv', 'r', newline='') as pizzaFile:
+                reader = csv.reader(pizzaFile)
+                rows = list(reader)
+                notDupe = True
+                for row in rows:  # for every row in the rows list
+                    if (str(values['_PIZZA_']).strip("['']")) == row[0]:
+                        notDupe = False
+            if notDupe:
+                with open('pizzaList.csv', 'a', newline='') as pizzaFile:
+                    writer = csv.writer(pizzaFile)
+                    pizzaCost = float(values["_PRICE_"])
+                    writer.writerow([(values["_PIZZA_"].capitalize()), ("$" + str(pizzaCost))])
+                tableupdate(False)
+                wipetab(str(values['_TAB_GROUP_']))
+            else:
+                sg.popup("Failed to create pizza! There cannot be duplicate pizzas.",
+                         keep_on_top=True, auto_close=True, auto_close_duration=3, title='PizzaPlace')
         else:
             sg.popup("Failed to create pizza! Make sure your entries are the right length and type.",
                      keep_on_top=True, auto_close=True, auto_close_duration=3, title='PizzaPlace')
@@ -297,12 +320,13 @@ while True:
             price = addpizza(False, price)
             price = roundup(price)
             pizzaChoices -= 1
-            window.element('_COST_').Update(value=("$"+str(price)))
+            window.element('_COST_').Update(value=("$" + str(price)))
         else:
             sg.popup("There are currently no selected pizzas!",
                      keep_on_top=True, auto_close=True, auto_close_duration=1, title='PizzaPlace')
     elif event == 'Delete' or event == 'Cut':
-        confirm = sg.popup_ok_cancel('Are you sure you want to remove this entry?', keep_on_top=True, title='PizzaPlace')
+        confirm = sg.popup_ok_cancel('Are you sure you want to remove this entry?', keep_on_top=True,
+                                     title='PizzaPlace')
         if confirm == "OK":
             deltable()
     elif event in (None, 'Cancel'):  # if user closes window or clicks cancel
