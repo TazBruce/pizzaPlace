@@ -196,7 +196,7 @@ frame2_layout = [[sg.T('Add Pizza', font='sfprodisplay 20 bold', justification='
                       auto_size_columns=False,
                       justification='left',
                       num_rows=3, key='_PIZZA_TABLE_', hide_vertical_scroll=False),
-                  sg.T(" "), sg.Button('Add', size=(7, 0), pad=(5, 0))],
+                  sg.T(" "), sg.Button('Add', size=(7, 0), pad=(0, 0))],
                  [sg.T('Total Pizzas', size=(12, 0), font='Helvetica 11 bold'),
                   sg.VerticalSeparator(pad=None),
                   sg.Listbox(values=[], size=(24, 5), key="_TOTAL_PIZZA_", enable_events=True),
@@ -205,18 +205,17 @@ frame2_layout = [[sg.T('Add Pizza', font='sfprodisplay 20 bold', justification='
                   sg.VerticalSeparator(pad=None), sg.T('$0.00', key="_COST_", size=(6, 0))],
                  [sg.T('Receipt?', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
                   sg.Checkbox('', enable_events=True)]]
-tab1_layout = [[sg.T('Create Order', font='sfprodisplay 25 bold', justification='center', size=(42, 0))],
+tab1_layout = [[sg.T('Create Order', font='sfprodisplay 25 bold', justification='center', size=(45, 0))],
                [sg.Frame("", frame1_layout, border_width=0), sg.Frame("", frame2_layout, border_width=0)],
                [sg.Button("Confirm Order                     ", size=(103, 0))]]
-tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold', justification='center', size=(48, 0))],
+tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold', justification='center', size=(40, 0))],
                [sg.Table(
                    values=customerData,
                    headings=customerHeaderList,
-                   max_col_width=25,
-                   auto_size_columns=True,
+                   col_widths=[15, 15, 10, 50, 3, 20, 5],
                    justification='left',
                    num_rows=15, key='_ORDER_TABLE_')],
-               [sg.Button('Delete', size=(106, 0), pad=(0, 0))]
+               [sg.Button('Delete', size=(87, 0), pad=(0, 0))]
                ]
 frame3_layout = [[sg.T('Pizza', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
                   sg.Input(size=(15, 0), key="_PIZZA_", tooltip="Allows 4 to 15 Characters", pad=(5, 0))],
