@@ -141,7 +141,7 @@ def addpizza(add, cost):
                 pizzaList.append(pizza[0])  # append pizza of selected row to pizza list variable
                 receipt.append([pizza[0], pizza[1]])
                 window.element('_TOTAL_PIZZA_').Update(values=receipt)  # update GUI list with new variable
-                return cost
+                return cost, False
             else:
                 if not values['_PIZZA_TABLE_']:
                     return cost, True
@@ -178,7 +178,8 @@ sg.SetGlobalIcon('logo.ico')
 
 frame1_layout = [[sg.T('Customer Details', font='sfprodisplay 20 bold', pad=(0, 10))],
                  [sg.T('First Name', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                  sg.Input(size=(28, 0), key="_FIRST_NAME_", tooltip="Allows 3 to 15 Characters")],
+                  sg.Input(size=(28, 0), key="_FIRST_NAME_", tooltip="Allows 3 to 15 Characters",
+                           default_text="e.g. name / Name")],
                  [sg.T('Last Name', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
                   sg.Input(size=(28, 0), key="_LAST_NAME_", tooltip="Allows 3 to 15 Characters")],
                  [sg.T('Phone Number', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
@@ -234,7 +235,7 @@ tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold', justification=
 frame3_layout = [[sg.T('Pizza', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
                   sg.Input(size=(15, 0), key="_PIZZA_", tooltip="Allows 4 to 15 Characters", pad=(5, 0))],
                  [sg.T('Price', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                  sg.Input(size=(15, 0), key="_PRICE_", tooltip="Allows 1 to 3 Numbers and 1 Decimal")],
+                  sg.Input(size=(15, 0), key="_PRICE_", tooltip="Allows 1 to 4 Numbers and 1 Decimal")],
                  [sg.T(" ", size=(0, 3))], [sg.Button('Create')]]
 frame4_layout = [[sg.Table(
     values=pizzaData,
@@ -284,6 +285,7 @@ while True:
                               ).format((values['_FIRST_NAME_'].capitalize()) + " " +
                                        (values['_LAST_NAME_'].capitalize()) + ":"), title='PizzaPlace')
                 pizzaList = []
+                receipt = []
                 if values[0]:
                     price = 6.99
                 else:
@@ -296,20 +298,20 @@ while True:
                      keep_on_top=True, auto_close=True, auto_close_duration=3, title='PizzaPlace')
     elif event == 'Create':
         test1 = valuecheck(values['_PIZZA_'], True, 4, 15)
-        test2 = valuecheck(values['_PRICE_'], False, 1, 4)
+        test2 = valuecheck(values['_PRICE_'], False, 1, 5)
         if test1 and test2:
             with open('pizzaList.csv', 'r', newline='') as pizzaFile:
                 reader = csv.reader(pizzaFile)
                 rows = list(reader)
                 notDupe = True
                 for row in rows:  # for every row in the rows list
-                    if (str(values['_PIZZA_']).strip("['']")) == row[0]:
+                    if (str(values['_PIZZA_']).capitalize()) == row[0]:
                         notDupe = False
             if notDupe:
                 with open('pizzaList.csv', 'a', newline='') as pizzaFile:
                     writer = csv.writer(pizzaFile)
-                    pizzaCost = float(values["_PRICE_"])
-                    writer.writerow([(values["_PIZZA_"].capitalize()), ("$" + str(pizzaCost))])
+                    pizzaCost = "{:.2f}".format(float(values["_PRICE_"]))
+                    writer.writerow([(values["_PIZZA_"].capitalize()), ("$" + pizzaCost)])
                 tableupdate(False)
                 wipetab(str(values['_TAB_GROUP_']))
             else:
@@ -320,7 +322,7 @@ while True:
                      keep_on_top=True, auto_close=True, auto_close_duration=3, title='PizzaPlace')
     elif event == 'Add':
         if pizzaChoices < 5:
-            price = addpizza(True, price)
+            price, error = addpizza(True, price)
             price = roundup(price)
             if price > 0:
                 pizzaChoices += 1
