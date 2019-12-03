@@ -26,7 +26,7 @@ def wipetab(tab):
         window.element("_FIRST_NAME_").Update(value='')
         window.element("_LAST_NAME_").Update(value='')
         window.element("_CONTACT_").Update(value='')
-        window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
+        window.element('_TOTAL_PIZZA_').Update(values=receipt)
         window.element("_ADDRESS_").Update(value='')
         sg.Popup('Order Created!', keep_on_top=True, auto_close=True, auto_close_duration=1, title='PizzaPlace')
     else:
@@ -132,29 +132,29 @@ def addpizza(add, cost):
     try:
         with open('pizzaList.csv', 'r') as pizzaFile:
             reader = csv.reader(pizzaFile)
-            rows = list(reader)
             if add:
+                rows = list(reader)
                 rowNum = int(str(values['_PIZZA_TABLE_']).strip('[]'))  # row number selected and remove brackets
                 rowNum += 1  # skip header row
                 pizza = rows[rowNum]
                 cost += float((pizza[1]).strip("$"))  # adds cost of selected row to cost variable
                 pizzaList.append(pizza[0])  # append pizza of selected row to pizza list variable
                 receipt.append([pizza[0], pizza[1]])
-                window.element('_TOTAL_PIZZA_').Update(values=pizzaList)  # update GUI list with new variable
+                window.element('_TOTAL_PIZZA_').Update(values=receipt)  # update GUI list with new variable
                 return cost
             else:
-                if not values["_TOTAL_PIZZA_"]:  # if no pizza is selected
-                    return cost
+                if not values['_PIZZA_TABLE_']:
+                    return cost, True
                 else:
-                    for row in rows:  # for every row in the rows list
-                        if (str(values['_TOTAL_PIZZA_']).strip("['']")) == row[0]:  # if pizza is equal to rows pizza
-                            pizza = row[1]  # pizza is made equal to cost of current row
-                    cost -= float(pizza.strip("$"))
-                    pizzaList.remove(str(values['_TOTAL_PIZZA_']).strip("['']"))  # removes selected pizza by string
-                    window.element('_TOTAL_PIZZA_').Update(values=pizzaList)
-                    return cost
+                    pizza = receipt[(int(str(values['_TOTAL_PIZZA_']).strip('[]')))]
+                    pizzaList.remove(pizza[0])  # append pizza of selected row to pizza list variable
+                    receipt.remove(pizza)  # removes selected pizza by string
+                    cost -= float(pizza[1].strip("$"))
+                    window.element('_TOTAL_PIZZA_').Update(values=receipt)
+                    return cost, False
     except:
-        return cost
+        return cost, True
+
 
 
 with open('pizzaCustomers.csv', "r") as CustomerTable:
@@ -188,34 +188,48 @@ frame1_layout = [[sg.T('Customer Details', font='sfprodisplay 20 bold', pad=(0, 
                  [sg.T('Street Address', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
                   sg.Input(size=(28, 0), disabled=True, key="_ADDRESS_", tooltip="Allows 5 to 30 Characters")],
                  [sg.T(" ", size=(0, 5))]]
-frame2_layout = [[sg.T('Add Pizza', font='sfprodisplay 20 bold', justification='center')],
-                 [sg.T('Choose Pizza', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+frame2_layout = [[sg.T('Add Pizza', font='sfprodisplay 20 bold', justification='center', pad=(0, 8))],
+                 [sg.T('Choose Pizza', size=(12, 0), font='Helvetica 11 bold'),
+                  sg.VerticalSeparator(pad=((5, 10), (0, 0))),
                   sg.Table(
+                      select_mode="browse",
                       values=pizzaData,
                       headings=pizzaHeaderList,
                       auto_size_columns=False,
+                      col_widths=[15, 6],
                       justification='left',
-                      num_rows=3, key='_PIZZA_TABLE_', hide_vertical_scroll=False),
-                  sg.T(" "), sg.Button('Add', size=(7, 0), pad=(0, 0))],
+                      num_rows=4, key='_PIZZA_TABLE_', hide_vertical_scroll=False),
+                  sg.Button('Add', size=(7, 0))],
                  [sg.T('Total Pizzas', size=(12, 0), font='Helvetica 11 bold'),
-                  sg.VerticalSeparator(pad=None),
-                  sg.Listbox(values=[], size=(24, 5), key="_TOTAL_PIZZA_", enable_events=True),
-                  sg.T(""), sg.Button('Remove')],
+                  sg.VerticalSeparator(pad=((5, 10), (0, 0))),
+                  sg.Table(
+                      select_mode="browse",
+                      auto_size_columns=False,
+                      headings=pizzaHeaderList,
+                      values=[' ', ' ', ' ', ' ', ' '],
+                      col_widths=[15, 6],
+                      justification='left',
+                      key="_TOTAL_PIZZA_",
+                      num_rows=5,
+                      enable_events=True),
+                  sg.Button('Remove')],
                  [sg.T('Total Cost', size=(12, 0), font='Helvetica 11 bold'),
                   sg.VerticalSeparator(pad=None), sg.T('$0.00', key="_COST_", size=(6, 0))],
                  [sg.T('Receipt?', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
                   sg.Checkbox('', enable_events=True)]]
 tab1_layout = [[sg.T('Create Order', font='sfprodisplay 25 bold', justification='center', size=(45, 0))],
-               [sg.Frame("", frame1_layout, border_width=0), sg.Frame("", frame2_layout, border_width=0)],
-               [sg.Button("Confirm Order                     ", size=(103, 0))]]
+               [sg.Frame("", frame1_layout, border_width=1, pad=((7, 70), (0, 0))),
+                sg.Frame("", frame2_layout, border_width=1, pad=((20, 0), (0, 0)))],
+               [sg.Button("Confirm Order", size=(110, 0), pad=(20, 0))]]
 tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold', justification='center', size=(40, 0))],
                [sg.Table(
                    values=customerData,
                    headings=customerHeaderList,
-                   col_widths=[15, 15, 10, 50, 3, 20, 5],
+                   col_widths=[15, 15, 10, 30, 4, 15, 5],
                    justification='left',
+                   auto_size_columns=False,
                    num_rows=15, key='_ORDER_TABLE_')],
-               [sg.Button('Delete', size=(87, 0), pad=(0, 0))]
+               [sg.Button('Delete', size=(114, 0), pad=(0, 0))]
                ]
 frame3_layout = [[sg.T('Pizza', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
                   sg.Input(size=(15, 0), key="_PIZZA_", tooltip="Allows 4 to 15 Characters", pad=(5, 0))],
@@ -246,7 +260,7 @@ window = sg.Window('PizzaPlace', layout,
 while True:
     event, values = window.Read()
     print(values)
-    if event == 'Confirm Order                     ':
+    if event == 'Confirm Order':
         test1 = valuecheck(values['_FIRST_NAME_'], True, 3, 15)
         test2 = valuecheck(values['_LAST_NAME_'], True, 3, 15)
         test3 = valuecheck(values["_CONTACT_"], False, 8, 10)
@@ -258,16 +272,17 @@ while True:
                 with open('pizzaCustomers.csv', "a", newline='') as newFile:
                     writer = csv.writer(newFile)
                     writer.writerow([values['_FIRST_NAME_'].capitalize(), values['_LAST_NAME_'].capitalize(),
-                                     values["_CONTACT_"], str(pizzaList).strip('[]'), ("Yes" if values[0] else "No"),
+                                     values["_CONTACT_"], (', '.join(pizzaList)), ("Yes" if values[0] else "No"),
                                      (str(values['_ADDRESS_']).strip('[,]') if values[0] else "N/A"),
                                      ("$" + str(price))])
                 tableupdate(True)
                 if values[1]:
                     sg.Popup(('''Total Ordered Pizzas and Prices for {}
-''' + (str(receipt)) + '''
+''' + "\n".join(" ".join(map(str, line)) for line in receipt) + '''
 ''' + ("Delivery Charge of 6.99" if values[0] else ("Total Cost of " + str(price))) + '''
 ''' + (("Total Cost of $" + str(price)) if values[0] else "")
-                              ).format(values['_FIRST_NAME_'] + " " + values['_LAST_NAME_'] + ":"), title='PizzaPlace')
+                              ).format((values['_FIRST_NAME_'].capitalize()) + " " +
+                                       (values['_LAST_NAME_'].capitalize()) + ":"), title='PizzaPlace')
                 pizzaList = []
                 if values[0]:
                     price = 6.99
@@ -307,7 +322,6 @@ while True:
         if pizzaChoices < 5:
             price = addpizza(True, price)
             price = roundup(price)
-            print(receipt)
             if price > 0:
                 pizzaChoices += 1
                 window.element("_COST_").Update(value=("$" + str(price)))
@@ -316,10 +330,14 @@ while True:
                      keep_on_top=True, auto_close=True, auto_close_duration=1, title='PizzaPlace')
     elif event == 'Remove':
         if pizzaChoices > 0:
-            price = addpizza(False, price)
-            price = roundup(price)
-            pizzaChoices -= 1
-            window.element('_COST_').Update(value=("$" + str(price)))
+            price, error = addpizza(False, price)
+            if error:
+                sg.popup("There are currently no selected pizzas!",
+                         keep_on_top=True, auto_close=True, auto_close_duration=1, title='PizzaPlace')
+            else:
+                price = roundup(price)
+                pizzaChoices -= 1
+                window.element('_COST_').Update(value=("$" + str(price)))
         else:
             sg.popup("There are currently no selected pizzas!",
                      keep_on_top=True, auto_close=True, auto_close_duration=1, title='PizzaPlace')
