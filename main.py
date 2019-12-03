@@ -177,18 +177,28 @@ sg.ChangeLookAndFeel('DarkRed1')
 sg.SetGlobalIcon('logo.ico')
 
 frame1_layout = [[sg.T('Customer Details', font='sfprodisplay 20 bold', pad=(0, 10))],
-                 [sg.T('First Name', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                 [sg.T('First Name', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=((0, 11), (3, 0))),
                   sg.Input(size=(28, 0), key="_FIRST_NAME_", tooltip="Allows 3 to 15 Characters",
-                           default_text="e.g. name / Name")],
-                 [sg.T('Last Name', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                  sg.Input(size=(28, 0), key="_LAST_NAME_", tooltip="Allows 3 to 15 Characters")],
-                 [sg.T('Phone Number', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                  sg.Input(size=(28, 0), key="_CONTACT_", tooltip="Allows 8 to 10 Numbers")],
-                 [sg.T('Delivery? ($6.99)', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
+                           default_text="e.g. bob OR Bob")],
+                 [sg.T('Last Name', size=(12, 0), font='Helvetica 11 bold'),
+                  sg.VerticalSeparator(pad=((0, 11), (0, 0))),
+                  sg.Input(size=(28, 0), key="_LAST_NAME_", tooltip="Allows 3 to 15 Characters",
+                           default_text="e.g. smith / Smith")],
+                 [sg.T('Phone Number', size=(12, 0), font='Helvetica 11 bold'),
+                  sg.VerticalSeparator(pad=((0, 11), (0, 0))),
+                  sg.Input(size=(28, 0), key="_CONTACT_", tooltip="Allows 8 to 10 Numbers",
+                           default_text="e.g. 0224122062")],
+                 [sg.T('Delivery? ($6.99)', size=(12, 0), font='Helvetica 11 bold'),
+                  sg.VerticalSeparator(pad=((0, 11), (0, 0))),
                   sg.Checkbox('', enable_events=True)],
-                 [sg.T('Street Address', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                  sg.Input(size=(28, 0), disabled=True, key="_ADDRESS_", tooltip="Allows 5 to 30 Characters")],
-                 [sg.T(" ", size=(0, 5))]]
+                 [sg.T('Street Address', size=(12, 0), font='Helvetica 11 bold'),
+                  sg.VerticalSeparator(pad=((0, 11), (0, 0))),
+                  sg.Input(size=(28, 0), disabled=True, key="_ADDRESS_", tooltip="Allows 5 to 30 Characters",
+                           default_text="e.g. 123 Cook Street")],
+                 [sg.T('Receipt?', size=(12, 0), font='Helvetica 11 bold'),
+                  sg.VerticalSeparator(pad=((0, 11), (0, 0))),
+                  sg.Checkbox('', enable_events=True)],
+                 [sg.T(" ", pad=((0, 0), (0, 18)))]]
 frame2_layout = [[sg.T('Add Pizza', font='sfprodisplay 20 bold', justification='center', pad=(0, 8))],
                  [sg.T('Choose Pizza', size=(12, 0), font='Helvetica 11 bold'),
                   sg.VerticalSeparator(pad=((5, 10), (0, 0))),
@@ -214,39 +224,44 @@ frame2_layout = [[sg.T('Add Pizza', font='sfprodisplay 20 bold', justification='
                       num_rows=5,
                       enable_events=True),
                   sg.Button('Remove')],
-                 [sg.T('Total Cost', size=(12, 0), font='Helvetica 11 bold'),
-                  sg.VerticalSeparator(pad=None), sg.T('$0.00', key="_COST_", size=(6, 0))],
-                 [sg.T('Receipt?', size=(12, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                  sg.Checkbox('', enable_events=True)]]
-tab1_layout = [[sg.T('Create Order', font='sfprodisplay 25 bold', justification='center', size=(45, 0))],
-               [sg.Frame("", frame1_layout, border_width=1, pad=((7, 70), (0, 0))),
-                sg.Frame("", frame2_layout, border_width=1, pad=((20, 0), (0, 0)))],
-               [sg.Button("Confirm Order", size=(110, 0), pad=(20, 0))]]
-tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold', justification='center', size=(40, 0))],
+                 [sg.T(" ", pad=((0, 0), (1, 0)))]]
+tab1_layout = [[sg.T('Create Order', font='sfprodisplay 25 bold', justification='center', size=(49, 0))],
+               [sg.Frame("", frame1_layout, border_width=0, pad=((0, 70), (0, 0))),
+                sg.Frame("", frame2_layout, border_width=0, pad=((70, 0), (0, 0)))],
+               [sg.T('Total Cost', size=(26, 0), font='sfprodisplay 18 bold underline',
+                     justification='center', pad=((300, 0), (0, 0)))],
+               [sg.T('$0.00', key="_COST_", size=(26, 0), pad=((300, 0), (0, 0)),
+                     justification='center', font='sfprodisplay 18 bold')],
+               [sg.Button("Confirm Order               ", size=(112, 0), pad=(18, 0))]]
+tab2_layout = [[sg.T('Total Orders', font='sfprodisplay 25 bold', justification='center',
+                     size=(30, 0), pad=((220, 0), (0, 5)))],
                [sg.Table(
                    values=customerData,
                    headings=customerHeaderList,
                    col_widths=[15, 15, 10, 30, 4, 15, 5],
                    justification='left',
                    auto_size_columns=False,
-                   num_rows=15, key='_ORDER_TABLE_')],
-               [sg.Button('Delete', size=(114, 0), pad=(0, 0))]
+                   num_rows=17, key='_ORDER_TABLE_')],
+               [sg.Button('Delete', size=(116, 0), pad=(0, 0))]
                ]
-frame3_layout = [[sg.T('Pizza', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                  sg.Input(size=(15, 0), key="_PIZZA_", tooltip="Allows 4 to 15 Characters", pad=(5, 0))],
-                 [sg.T('Price', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=None),
-                  sg.Input(size=(15, 0), key="_PRICE_", tooltip="Allows 1 to 4 Numbers and 1 Decimal")],
-                 [sg.T(" ", size=(0, 3))], [sg.Button('Create')]]
+frame3_layout = [[sg.T('Pizza', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=((0, 11), (3, 0))),
+                  sg.Input(size=(30, 0), key="_PIZZA_", tooltip="Allows 4 to 20 Characters", pad=(5, 0),
+                           default_text="e.g. Cheese or cheese")],
+                 [sg.T('Price', size=(6, 0), font='Helvetica 11 bold'), sg.VerticalSeparator(pad=((0, 11), (0, 4))),
+                  sg.Input(size=(30, 0), key="_PRICE_", tooltip="Allows 1 to 4 Numbers and 1 Decimal",
+                           default_text="e.g. 12.99 OR 12 OR 12.0 OR 12.00")],
+                 [sg.Button('Create', size=(38, 0), pad=((7, 0), (4, 5)))]]
 frame4_layout = [[sg.Table(
     values=pizzaData,
     headings=pizzaHeaderList,
     auto_size_columns=False,
     justification='left',
-    num_rows=5, key='_PIZZA_LIST_TABLE_')],
-    [sg.Button('Cut')]]
+    col_widths=[15, 15],
+    num_rows=12, key='_PIZZA_LIST_TABLE_')],
+    [sg.Button('Cut', size=(38, 0), pad=((1, 0), (4, 0)))]]
 tab3_layout = [[sg.T('Create Pizza', font='sfprodisplay 25 bold', justification='center', size=(24, 0), pad=(0, 0))],
-               [sg.Frame("", frame3_layout, border_width=0, pad=(0, 0)),
-                sg.Frame("", frame4_layout, border_width=0, pad=(0, 0))]]
+               [sg.Frame("", frame3_layout, border_width=0, pad=(0, 3))],
+               [sg.Frame("", frame4_layout, border_width=0, pad=(0, 0))]]
 
 layout = [[sg.TabGroup([[sg.Tab('Create Order', tab1_layout, pad=(0, 0)),
                          sg.Tab('Total Orders', tab2_layout, pad=(0, 0)),
@@ -261,7 +276,7 @@ window = sg.Window('PizzaPlace', layout,
 while True:
     event, values = window.Read()
     print(values)
-    if event == 'Confirm Order':
+    if event == 'Confirm Order               ':
         test1 = valuecheck(values['_FIRST_NAME_'], True, 3, 15)
         test2 = valuecheck(values['_LAST_NAME_'], True, 3, 15)
         test3 = valuecheck(values["_CONTACT_"], False, 8, 10)
@@ -297,7 +312,7 @@ while True:
             sg.Popup("Failed to create order! Make sure your entries are the right length and type.",
                      keep_on_top=True, auto_close=True, auto_close_duration=3, title='PizzaPlace')
     elif event == 'Create':
-        test1 = valuecheck(values['_PIZZA_'], True, 4, 15)
+        test1 = valuecheck(values['_PIZZA_'], True, 4, 20)
         test2 = valuecheck(values['_PRICE_'], False, 1, 5)
         if test1 and test2:
             with open('pizzaList.csv', 'r', newline='') as pizzaFile:
